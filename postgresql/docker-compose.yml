@@ -18,7 +18,7 @@ services:
       - 80:80
   # Database service
   postgresql:
-    image: postgres:17.4
+    image: postgres:17.5
     volumes:
       - ./fineract-db/docker/01-init.sh:/docker-entrypoint-initdb.d/01-init.sh:Z,ro
     restart: always
