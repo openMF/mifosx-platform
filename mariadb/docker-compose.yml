@@ -18,7 +18,7 @@ services:
       - 80:80
   # Database service
   fineractmysql:
-    image: mariadb:11.7.2
+    image: mariadb:11.8.2
     ports:
       - 3308:3306
     volumes:
