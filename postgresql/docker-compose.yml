@@ -2,7 +2,7 @@ version: '3.7'
 services:
   # Frontend service
   web-app:
-    image: openmf/web-app:master
+    image: openmf/web-app:dev
     restart: always
     environment:
       - FINERACT_API_URLS=http://localhost:8080
