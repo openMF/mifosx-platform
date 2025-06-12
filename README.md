@@ -12,12 +12,12 @@ Example:
 ```yaml
 services:
   web-app:
-    image: openmf/web-app:master
+    image: openmf/web-app:dev
     platform: linux/x86_64/v8
     ...
 
   fineract-server:
-    image: fineract-server:latest
+    image: openmf/fineract:develop
     platform: linux/x86_64/v8
     ...
 ```
