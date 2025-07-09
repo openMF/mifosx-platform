@@ -22,6 +22,13 @@ services:
     ...
 ```
 
+**Installation Script:**
+For an assisted installation, run the installation script from a bash terminal.
+
+```console
+bash <(curl -sL https://raw.githubusercontent.com/openMF/mifosx-platform/main/install.sh)
+```
+
 For using MariaDB:
 
 ```console
