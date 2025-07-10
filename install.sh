@@ -102,11 +102,13 @@ curl -sfLo .env https://raw.githubusercontent.com/openMF/mifosx-platform/$branch
 }
 
 # Copy mifosx/packages/fineract-db/docker/01-init.sh
-echo -e "\t• Setting up 01-init.sh file"
-curl -sfLo 01-init.sh https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/fineract-db/docker/01-init.sh || {
-  echo "❌ Failed to download 01-init.sh for $dbtype"
-  exit 1
-}
+echo -e "\t• Setting up initialization files"
+if [[ $dbtype == "postgresql" ]]; then
+  curl -sfLo 01-init.sh https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/fineract-db/docker/01-init.sh || {
+    echo "❌ Failed to download 01-init.sh for $dbtype"
+    exit 1
+  }
+fi
 
 # Replace TAG=latest by TAG=<latest_release or version input>
 if [[ $(uname) == "Darwin" ]]; then
@@ -131,7 +133,7 @@ echo "APP_SECRET=$(openssl rand -base64 32)" >> .env
 # echo "PG_DATABASE_PASSWORD=$(openssl rand -hex 32)" >> .env
 dbpassword=$(openssl rand -hex 32)
 if [[ $dbtype == "mariadb" ]]; then
-    sed -i'' "s/^MYSQL=.*/MYSQL=$(openssl rand -hex 32)/g" .env
+    sed -i'' "s/^MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=$dbpassword/g" .env
 elif [[ $dbtype == "postgresql" ]]; then 
   sed -i'' "s/^PG_PASSWORD=.*/PG_PASSWORD=$dbpassword/g" .env
   sed -i'' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$dbpassword/g" .env
@@ -179,7 +181,14 @@ else
   docker compose logs -f fineract-server &
   pid=$!
   
-  while [ "$(docker inspect --format='{{.State.Health.Status}}' twenty-server-1 2>/dev/null)" != "healthy" ]; do
+  # Fixed: Use correct container name based on directory
+  container_name=$(docker compose ps -q fineract-server)
+  if [ -z "$container_name" ]; then
+    echo "❌ Could not find fineract-server container"
+    exit 1
+  fi
+  
+  while [ "$(docker inspect --format='{{.State.Health.Status}}' $container_name 2>/dev/null)" != "healthy" ]; do
     sleep 1
   done
   kill $pid
@@ -199,16 +208,33 @@ function ask_open_browser {
 # Running on macOS
 if [[ $(uname) == "Darwin" ]]; then
   ask_open_browser
-
-  open "http://localhost:$port"
-# Assuming Linux
-else
-  # xdg-open is not installed, we could be running in a non gui environment
-  if command -v xdg-open >/dev/null 2>&1; then
-    ask_open_browser
-
-    xdg-open "http://localhost:$port"
-  else
-    echo "✅ Setup completed. Your project is available at http://localhost:$port"
+  if [ "$answer" != "n" ]; then
+    open "http://localhost:$port"
   fi
+# Running on Linux
+elif [[ $(uname) == "Linux" ]]; then
+  ask_open_browser
+  if [ "$answer" != "n" ]; then
+    if command -v xdg-open &> /dev/null; then
+      xdg-open "http://localhost:$port"
+    elif command -v gnome-open &> /dev/null; then
+      gnome-open "http://localhost:$port"
+    else
+      echo "🌐 Please open your browser and go to http://localhost:$port"
+    fi
+  fi
+# Running on Windows
+elif [[ $(uname) == "MINGW"* ]] || [[ $(uname) == "MSYS"* ]]; then
+  ask_open_browser
+  if [ "$answer" != "n" ]; then
+    start "http://localhost:$port"
+  fi
+else
+  echo "🌐 Please open your browser and go to http://localhost:$port"
 fi
+
+echo "✅ Setup completed successfully!"
+echo "📝 Default credentials:"
+echo "   User: mifos"
+echo "   Password: password"
+echo "🌐 Access your project at http://localhost:$port"
