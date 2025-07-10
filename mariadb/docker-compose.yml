@@ -5,8 +5,8 @@ services:
     image: openmf/web-app:dev
     restart: always
     environment:
-      - FINERACT_API_URLS=http://localhost:8080
-      - FINERACT_API_URL=http://localhost:8080
+      - FINERACT_API_URLS=${SERVER_URL:-http://localhost:8080}
+      - FINERACT_API_URL=${SERVER_URL:-http://localhost:8080}
       - FINERACT_API_PROVIDER=/fineract-provider/api
       - FINERACT_API_VERSION=/v1
       - FINERACT_PLATFORM_TENANT_IDENTIFIER=default
@@ -28,15 +28,17 @@ services:
       - ./fineract-db/max_connections.cnf:/etc/mysql/conf.d/max_connections.cnf
       - ./fineract-db/docker:/docker-entrypoint-initdb.d:Z,ro
     restart: always
+    env_file:
+      - ./.env
     environment:
-      MYSQL_ROOT_PASSWORD: skdcnwauicn2ucnaecasdsajdnizucawencascdca
-#    healthcheck:
-#      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "--password=skdcnwauicn2ucnaecasdsajdnizucawencascdca" ]
-#      timeout: 10s
-#      retries: 10
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "--password=${MYSQL_ROOT_PASSWORD}" ]
+      timeout: 10s
+      retries: 10
   # Backend service
   fineract-server:
-    image: openmf/fineract:develop
+    image: openmf/fineract:${TAG:-develop}
     volumes:
       - ./fineract-server/data:/data
     healthcheck:
@@ -44,10 +46,10 @@ services:
       timeout: 10s
       retries: 10
     ports:
-      - 8080:8080
-#    depends_on:
-#      fineractmysql:
-#        condition: service_healthy
+      - ${FINERACT_PORT:-8080}:8080
+    depends_on:
+      fineractmysql:
+        condition: service_healthy
     environment:
       # NOTE: node aware scheduler
       - FINERACT_NODE_ID=1
@@ -55,7 +57,7 @@ services:
       - FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.mariadb.jdbc.Driver
       - FINERACT_HIKARI_JDBC_URL=jdbc:mariadb://fineractmysql:3306/fineract_tenants
       - FINERACT_HIKARI_USERNAME=root
-      - FINERACT_HIKARI_PASSWORD=skdcnwauicn2ucnaecasdsajdnizucawencascdca
+      - FINERACT_HIKARI_PASSWORD=${MYSQL_ROOT_PASSWORD}
       # ... following variables are optional; "application.properties" contains reasonable defaults (same as here)
       - FINERACT_HIKARI_MINIMUM_IDLE=3
       - FINERACT_HIKARI_MAXIMUM_POOL_SIZE=10
@@ -79,7 +81,7 @@ services:
       - FINERACT_DEFAULT_TENANTDB_HOSTNAME=fineractmysql
       - FINERACT_DEFAULT_TENANTDB_PORT=3306
       - FINERACT_DEFAULT_TENANTDB_UID=root
-      - FINERACT_DEFAULT_TENANTDB_PWD=skdcnwauicn2ucnaecasdsajdnizucawencascdca
+      - FINERACT_DEFAULT_TENANTDB_PWD=${MYSQL_ROOT_PASSWORD}
       - FINERACT_DEFAULT_TENANTDB_CONN_PARAMS=
       - FINERACT_DEFAULT_TENANTDB_TIMEZONE=Asia/Kolkata
       - FINERACT_DEFAULT_TENANTDB_IDENTIFIER=default
