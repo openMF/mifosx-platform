@@ -101,9 +101,33 @@ curl -sfLo .env https://raw.githubusercontent.com/openMF/mifosx-platform/$branch
   exit 1
 }
 
-# Copy mifosx/packages/fineract-db/docker/01-init.sh
-echo -e "\t• Setting up initialization files"
-if [[ $dbtype == "postgresql" ]]; then
+if [[ "$dbtype" == "mariadb" ]]; then
+  mkdir -p fineract-db || { echo "❌ Failed to create directory fineract-db"; exit 1; }
+  mkdir -p fineract-db/docker || { echo "❌ Failed to create directory fineract-db/docker"; exit 1; }
+  
+  # Copy mifosx/mariadb/max_connections.cnf to fineract-db/max_connections.cnf
+  echo -e "\t• Copying max_connections.cnf file"
+  curl -sfLo fineract-db/max_connections.cnf https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/fineract-db/max_connections.cnf || {
+    echo "❌ Failed to download max_connections.cnf for $dbtype"
+    exit 1
+  }
+
+  # Copy mifosx/mariadb/server_collation.cnf to fineract-db/server_collation.cnf
+  echo -e "\t• Copying server_collation.cnf file"
+  curl -sfLo fineract-db/server_collation.cnf https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/fineract-db/server_collation.cnf || {
+    echo "❌ Failed to download server_collation.cnf for $dbtype"
+    exit 1
+  }
+
+  # Copy mifosx/mariadb/01-databases.sql to fineract-db/docker/01-databases.sql
+  echo -e "\t• Copying 01-databases.sql file"
+  curl -sfLo fineract-db/docker/01-databases.sql https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/fineract-db/docker/01-databases.sql || {
+    echo "❌ Failed to download max_connections.cnf for $dbtype"
+    exit 1
+  }
+elif [[ $dbtype == "postgresql" ]]; then
+  # Copy mifosx/packages/fineract-db/docker/01-init.sh
+  echo -e "\t• Setting up initialization files"
   curl -sfLo 01-init.sh https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/fineract-db/docker/01-init.sh || {
     echo "❌ Failed to download 01-init.sh for $dbtype"
     exit 1
@@ -113,10 +137,9 @@ fi
 # Replace TAG=latest by TAG=<latest_release or version input>
 if [[ $(uname) == "Darwin" ]]; then
   # Running on macOS
-  sed -i '' "s/TAG=latest/TAG=$version/g" .env
+  sed -i '' "s/^TAG=.*/TAG=$version/g" .env
 else
   # Assuming Linux || f the TAG variable does not exist, it will be added
-  #sed -i'' "s/TAG=latest/TAG=$version/g" .env
   if grep -q "^TAG=" .env; then
     sed -i'' "s/^TAG=.*/TAG=$version/g" .env
   else
@@ -132,40 +155,72 @@ echo "APP_SECRET=$(openssl rand -base64 32)" >> .env
 # echo "" >> .env
 # echo "PG_DATABASE_PASSWORD=$(openssl rand -hex 32)" >> .env
 dbpassword=$(openssl rand -hex 32)
-if [[ $dbtype == "mariadb" ]]; then
-    sed -i'' "s/^MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=$dbpassword/g" .env
-elif [[ $dbtype == "postgresql" ]]; then 
-  sed -i'' "s/^PG_PASSWORD=.*/PG_PASSWORD=$dbpassword/g" .env
-  sed -i'' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$dbpassword/g" .env
-  sed -i'' "s/^FINERACT_DB_PASS=.*/FINERACT_DB_PASS=$dbpassword/g" .env
+
+if [[ $(uname) == "Darwin" ]]; then
+  # Running on macOS
+  if [[ $dbtype == "mariadb" ]]; then
+    sed -i '' "s/^MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=$dbpassword/g" .env
+  elif [[ $dbtype == "postgresql" ]]; then 
+    sed -i '' "s/^PG_PASSWORD=.*/PG_PASSWORD=$dbpassword/g" .env
+    sed -i '' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$dbpassword/g" .env
+  else
+    echo "❌ Unknown database type: $dbtype"
+    exit 1
+  fi
+  sed -i '' "s/^FINERACT_DB_PASS=.*/FINERACT_DB_PASS=$dbpassword/g" .env
 else
-  echo "❌ Unknown database type: $dbtype"
-  exit 1
+  # Assuming Linux
+  if [[ $dbtype == "mariadb" ]]; then
+    sed -i'' "s/^MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=$dbpassword/g" .env
+    
+  elif [[ $dbtype == "postgresql" ]]; then 
+    sed -i'' "s/^PG_PASSWORD=.*/PG_PASSWORD=$dbpassword/g" .env
+    sed -i'' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$dbpassword/g" .env
+  else
+    echo "❌ Unknown database type: $dbtype"
+    exit 1
+  fi
+  sed -i'' "s/^FINERACT_DB_PASS=.*/FINERACT_DB_PASS=$dbpassword/g" .env
 fi
 
-echo -e "\t• .env configuration completed"
-
 port=3000
+webAppPort=80
 # Check if command nc is available
 if command -v nc &> /dev/null; then
   # Check if port 3000 is already in use, propose to change it
   while nc -zv localhost $port &>/dev/null; do
-    read -p "🚫 Port $port is already in use. Do you want to use another port? (Y/n) " answer
+    read -p $'\n🚫 Port '"$port"' for the backend service is already in use. \nDo you want to use a different port? (Y/n) ' answer
     if [ "$answer" = "n" ]; then
       continue
     fi
     read -p "Enter a new port number: " new_port
         port=$new_port
   done
+  # Check if port 80 is already in use, propose to change it
+  while nc -zv localhost $webAppPort &>/dev/null; do
+    read -p $'\n🚫 Port '"$webAppPort"' for the Web App service is already in use. \nDo you want to use a different port? (Y/n) ' answer
+    if [ "$answer" = "n" ]; then
+      continue
+    fi
+    read -p "Enter a new port number: " new_port
+        webAppPort=$new_port
+  done
 fi
 
+# Define Fineract Backend Port and Mifos Web App Port
 if [[ $(uname) == "Darwin" ]]; then
   sed -i '' "s/^FINERACT_PORT=.*/FINERACT_PORT=$port/g" .env
-#  sed -E -i '' "s|^SERVER_URL=http://localhost:[0-9]+|SERVER_URL=http://localhost:$port|g" .env
+  sed -E -i '' "s|^SERVER_URL=http://localhost:[0-9]+|SERVER_URL=http://localhost:$port|g" .env
+  sed -i '' "s/^WEB_APP_PORT=.*/WEB_APP_PORT=$webAppPort/g" .env
+  sed -E -i '' "s|^WEB_APP_URL=http://localhost:[0-9]+|WEB_APP_URL=http://localhost:$webAppPort|g" .env
 else
   sed -i'' "s/^FINERACT_PORT=.*/FINERACT_PORT=$port/g" .env
   sed -E -i'' "s|^SERVER_URL=http://localhost:[0-9]+|SERVER_URL=http://localhost:$port|g" .env
+  sed -i "s/^WEB_APP_PORT=.*/WEB_APP_PORT=$webAppPort/g" .env
+  sed -E -i'' "s|^WEB_APP_URL=http://localhost:[0-9]+|WEB_APP_URL=http://localhost:$webAppPort|g" .env
 fi
+
+echo -e "\t• .env configuration completed"
 
 # Ask user if they want to start the project
 read -p "🚀 Do you want to start the project now? (Y/n) " answer
@@ -178,7 +233,9 @@ else
   # Check if port is listening
   echo "Waiting for server to be healthy, it might take a few minutes while we initialize the database..."
   # Tail logs of the server until it's ready
-  docker compose logs -f fineract-server &
+  # Start logs with timeout (will automatically stop after N seconds)
+  #docker compose logs -f fineract-server &
+  timeout 110 docker compose logs -f fineract-server &
   pid=$!
   
   # Fixed: Use correct container name based on directory
@@ -191,15 +248,21 @@ else
   while [ "$(docker inspect --format='{{.State.Health.Status}}' $container_name 2>/dev/null)" != "healthy" ]; do
     sleep 1
   done
-  kill $pid
+  # Kill the logs process if still running
+  kill $log_pid 2>/dev/null || true
   echo ""
   echo "✅ Server is up and running"
 fi
 
+echo "✅ Setup completed successfully!"
+echo "📝 Default credentials:"
+echo "   User: mifos"
+echo "   Password: password"
+
 function ask_open_browser {
   read -p "🌐 Do you want to open the project in your browser? (Y/n) " answer
   if [ "$answer" = "n" ]; then
-    echo "✅ Setup completed. Access your project at http://localhost:$port"
+    echo "🌐 You can access the project at http://localhost:$webAppPort"
     exit 0
   fi
 }
@@ -209,32 +272,26 @@ function ask_open_browser {
 if [[ $(uname) == "Darwin" ]]; then
   ask_open_browser
   if [ "$answer" != "n" ]; then
-    open "http://localhost:$port"
+    open "http://localhost:$webAppPort"
   fi
 # Running on Linux
 elif [[ $(uname) == "Linux" ]]; then
   ask_open_browser
   if [ "$answer" != "n" ]; then
     if command -v xdg-open &> /dev/null; then
-      xdg-open "http://localhost:$port"
+      xdg-open "http://localhost:$webAppPort"
     elif command -v gnome-open &> /dev/null; then
-      gnome-open "http://localhost:$port"
+      gnome-open "http://localhost:$webAppPort"
     else
-      echo "🌐 Please open your browser and go to http://localhost:$port"
+      echo "🌐 Please open your browser and go to http://localhost:$webAppPort"
     fi
   fi
 # Running on Windows
 elif [[ $(uname) == "MINGW"* ]] || [[ $(uname) == "MSYS"* ]]; then
   ask_open_browser
   if [ "$answer" != "n" ]; then
-    start "http://localhost:$port"
+    start "http://localhost:$webAppPort"
   fi
 else
-  echo "🌐 Please open your browser and go to http://localhost:$port"
+  echo "🌐 Please open your browser and go to http://localhost:$webAppPort"
 fi
-
-echo "✅ Setup completed successfully!"
-echo "📝 Default credentials:"
-echo "   User: mifos"
-echo "   Password: password"
-echo "🌐 Access your project at http://localhost:$port"
