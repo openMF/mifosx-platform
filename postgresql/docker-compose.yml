@@ -5,8 +5,8 @@ services:
     image: openmf/web-app:dev
     restart: always
     environment:
-      - FINERACT_API_URLS=${SERVER_URL}
-      - FINERACT_API_URL=${SERVER_URL}
+      - FINERACT_API_URLS=${SERVER_URL:-http://localhost:8080}
+      - FINERACT_API_URL=${SERVER_URL:-http://localhost:8080}
       - FINERACT_API_PROVIDER=/fineract-provider/api
       - FINERACT_API_VERSION=/v1
       - FINERACT_PLATFORM_TENANT_IDENTIFIER=default
@@ -15,7 +15,7 @@ services:
       - MIFOS_PRELOAD_CLIENTS=true
       - MIFOS_DEFAULT_CHAR_DELIMITER=,
     ports:
-      - 80:80
+      - ${WEB_APP_PORT:-80}:${WEB_APP_PORT:-80}
   # Database service
   postgresql:
     image: postgres:17.5
@@ -84,5 +84,5 @@ services:
       - FINERACT_DEFAULT_TENANTDB_NAME=fineract_default
       - FINERACT_DEFAULT_TENANTDB_DESCRIPTION=Default Demo Tenant
       - FINERACT_SERVER_SSL_ENABLED=false
-      - FINERACT_SERVER_PORT=${FINERACT_PORT}
+      - FINERACT_SERVER_PORT=${FINERACT_PORT:-8080}
       - FINERACT_LOGGING_LEVEL=INFO
