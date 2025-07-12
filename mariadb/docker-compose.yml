@@ -38,7 +38,7 @@ services:
       retries: 10
   # Backend service
   fineract-server:
-    image: openmf/fineract:${TAG:-develop}
+    image: openmf/fineract:${TAG}
     volumes:
       - ./fineract-server/data:/data
     healthcheck:
