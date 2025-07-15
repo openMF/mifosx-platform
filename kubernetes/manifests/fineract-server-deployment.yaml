@@ -97,7 +97,7 @@ spec:
             - name:  FINERACT_LIQUIBASE_ENABLED
               value: "false"
           # image: openmf/fineract:develop
-          image: openmf/fineract:1.11.0
+          image: mifos-docker-hub.jfrog.io/openmf/fineract:1.11.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
