@@ -103,8 +103,8 @@ spec:
             httpGet:
               path: /fineract-provider/actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 1
+            initialDelaySeconds: 180
+            periodSeconds: 10
             failureThreshold: 5
             timeoutSeconds: 2
           readinessProbe:
