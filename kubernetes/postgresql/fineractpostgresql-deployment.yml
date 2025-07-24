@@ -1,0 +1,131 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements. See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership. The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: fineractpostgresql-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/data"
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fineractpostgresql-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: fineract-server
+  name: fineractpostgresql
+spec:
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  selector:
+    app: fineract-server
+    tier: fineractpostgresql
+  clusterIP: None
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: fineract-server
+  name: fineractpostgresql
+spec:
+  selector:
+    matchLabels:
+      app: fineract-server
+      tier: fineractpostgresql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: fineract-server
+        tier: fineractpostgresql
+    spec:
+      containers:
+        - image: postgres:17.5
+          name: postgres
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "1000m"
+            limits:
+              memory: "5Gi"
+              cpu: "2000m"
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fineract-tenants-db-secret
+                  key: password
+          livenessProbe:
+            exec:              
+              command: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "postgres" ]
+            failureThreshold: 10
+            timeoutSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - CMD 
+                - pg_isready -q -d postgres -U postgres              
+            failureThreshold: 10
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          ports:
+            - containerPort: 5432
+              name: fineractpostgresql
+          volumeMounts:
+            - name: fineractpostgresql-initdb
+              mountPath: /docker-entrypoint-initdb.d/
+            - name: fineractpostgresql-persistent-storage
+              mountPath: /var/lib/mysql/
+      volumes:
+        - name: fineractpostgresql-initdb
+          configMap:
+            name: fineractpostgresql-initdb
+        - name: fineractpostgresql-persistent-storage
+          persistentVolumeClaim:
+            claimName: fineractpostgresql-pv-claim
