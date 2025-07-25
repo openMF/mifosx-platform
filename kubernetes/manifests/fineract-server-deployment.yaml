@@ -121,10 +121,10 @@ spec:
               protocol: TCP
           resources:
             requests:
-              memory: "256M"
+              memory: "256Mi"
               cpu: "200m"
             limits:
-              memory: "1G"
+              memory: "1600Mi"
               cpu: "500m"
           volumeMounts:
             - mountPath: /data
