@@ -119,13 +119,13 @@ spec:
           ports:
             - containerPort: 8080
               protocol: TCP
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "200m"
-            limits:
-              memory: "1600Mi"
-              cpu: "500m"
+          # resources:
+          #   requests:
+          #     memory: "256Mi"
+          #     cpu: "200m"
+          #   limits:
+          #     memory: "1600Mi"
+          #     cpu: "500m"
           volumeMounts:
             - mountPath: /data
               name: fineract-server-claim0
