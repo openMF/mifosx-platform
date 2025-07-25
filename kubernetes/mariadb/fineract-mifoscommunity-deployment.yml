@@ -54,10 +54,10 @@ spec:
         app: mifos-webapp
         tier: frontend
     spec:
-      initContainers:
-        - name: init-myservice
-          image: busybox:1.28
-          command: ['sh', '-c', 'echo -e "Checking for the availability of Fineract server deployment"; while ! nc -z "fineract-server" 8443; do sleep 1; printf "-"; done; echo -e " >> Fineract server has started";']
+      #initContainers:
+       # - name: init-myservice
+        #  image: busybox:1.28
+         # command: ['sh', '-c', 'echo -e "Checking for the availability of Fineract server deployment"; while ! nc -z "fineract-server" 8443; do sleep 1; printf "-"; done; echo -e " >> Fineract server has started";']
       containers:
       - name: mifos-webapp
         image: openmf/web-app:dev
