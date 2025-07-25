@@ -80,6 +80,17 @@ spec:
             port: 80
           initialDelaySeconds: 90
           periodSeconds: 1
+        env:
+        - name: FINERACT_PLATFORM_TENANT_IDENTIFIER 
+          value: default 
+        - name: FINERACT_API_PROVIDER
+          value: /fineract-provider/api
+        - name: FINERACT_API_VERSION 
+          value: /v1 
+        - name: MIFOS_DEFAULT_LANGUAGE
+          value: en-US 
+        - name: FINERACT_API_URL
+          value: https://fineract-server:8443 
         ports:
         - containerPort: 80
           name: mifos-webapp
