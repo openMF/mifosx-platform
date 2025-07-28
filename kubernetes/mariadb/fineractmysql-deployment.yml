@@ -121,8 +121,8 @@ spec:
           volumeMounts:
             - name: fineractmysql-initdb
               mountPath: /docker-entrypoint-initdb.d/
-            - name: fineractmysql-persistent-storage
-              mountPath: /var/lib/mysql/
+            #- name: fineractmysql-persistent-storage
+            #  mountPath: /var/lib/mysql/
       volumes:
         - name: fineractmysql-initdb
           configMap:
