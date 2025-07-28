@@ -68,18 +68,18 @@ spec:
           requests:
             cpu: "200m"
             memory: "0.5Gi"
-        livenessProbe:
-          httpGet:
-            path: /fineract-provider/actuator/health/liveness
-            port: 8080
-          initialDelaySeconds: 180
-          periodSeconds: 1
-        readinessProbe:
-          httpGet:
-            path: /fineract-provider/actuator/health/readiness
-            port: 8080
-          initialDelaySeconds: 180
-          periodSeconds: 1
+        #livenessProbe:
+        #  httpGet:
+        #    path: /fineract-provider/actuator/health/liveness
+        #    port: 8080
+        #  initialDelaySeconds: 180
+        #  periodSeconds: 1
+        #readinessProbe:
+        #  httpGet:
+        #    path: /fineract-provider/actuator/health/readiness
+        #    port: 8080
+        #  initialDelaySeconds: 180
+        #  periodSeconds: 1
         env:
         - name: FINERACT_NODE_ID
           value: '1'

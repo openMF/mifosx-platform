@@ -68,18 +68,18 @@ spec:
           requests:
             cpu: "200m"
             memory: "0.5Gi"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 90
-          periodSeconds: 1
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 90
-          periodSeconds: 1
+        #livenessProbe:
+        #  httpGet:
+        #    path: /
+        #    port: 80
+        #  initialDelaySeconds: 90
+        #  periodSeconds: 1
+        #readinessProbe:
+        #  httpGet:
+        #    path: /
+        #    port: 80
+        #  initialDelaySeconds: 90
+        #  periodSeconds: 1
         env:
         - name: FINERACT_PLATFORM_TENANT_IDENTIFIER 
           value: default 
