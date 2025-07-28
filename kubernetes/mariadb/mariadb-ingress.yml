@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
-meta
-  name: mysql-loadbalancer
+metadata:
+  name: fineractmysql-loadbalancer
   #namespace: mysql
 spec:
   type: LoadBalancer
