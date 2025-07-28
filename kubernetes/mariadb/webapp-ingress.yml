@@ -17,7 +17,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: fineract-ingress
+  name: mifos-webapp-ingress
   #namespace: fineract
   annotations:
     # Example: NGINX Ingress Controller annotations
@@ -42,11 +42,11 @@ spec:
   # TLS Configuration (optional but recommended)
   tls:
     - hosts:
-        - demo.mifos.local
+        - webapp.mifos.local
   #    secretName: fineract-tls-secret  # Must be a valid tls secret with cert & key
 
   rules:
-    - host: demo.mifos.local
+    - host: webapp.mifos.local
       http:
         paths:
           - path: /

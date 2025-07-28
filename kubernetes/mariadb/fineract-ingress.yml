@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: http-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fineract-server
+            port:
+              number: 8443
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mifos-fineract-ingress
+  #namespace: fineract
+  annotations:
+    # Example: NGINX Ingress Controller annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Host $host;
+    # Enable HTTPS redirect
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Optional: CORS (if needed for API access)
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+
+spec:
+  # Optional: Specify ingress class (required in K8s 1.18+)
+  ingressClassName: nginx  # Change to your ingress class (e.g., nginx, traefik, alb)
+
+  # TLS Configuration (optional but recommended)
+  tls:
+    - hosts:
+        - fineract.mifos.local
+  #    secretName: fineract-tls-secret  # Must be a valid tls secret with cert & key
+
+  rules:
+    - host: fineract.mifos.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fineract-server  # Replace with your actual service name
+                port:
+                  number: 8443         # Default Spring Boot port              
