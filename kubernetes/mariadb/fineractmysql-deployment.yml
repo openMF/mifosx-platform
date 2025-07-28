@@ -101,20 +101,20 @@ spec:
                 secretKeyRef:
                   name: fineract-tenants-db-secret
                   key: password
-          livenessProbe:
-            exec:
-              command: ["sh","-c","mysqladmin ping -h localhost -uroot -p${MARIADB_ROOT_PASSWORD}"]
-            failureThreshold: 10
-            timeoutSeconds: 10
-          readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - mysqladmin ping -uroot -p${MARIADB_ROOT_PASSWORD}
-            failureThreshold: 10
-            initialDelaySeconds: 5
-            periodSeconds: 5
+          #livenessProbe:
+          #  exec:
+          #    command: ["sh","-c","mysqladmin ping -h localhost -uroot -p${MARIADB_ROOT_PASSWORD}"]
+          #  failureThreshold: 10
+          #  timeoutSeconds: 10
+          #readinessProbe:
+          #  exec:
+          #    command:
+          #      - sh
+          #      - -c
+          #      - mysqladmin ping -uroot -p${MARIADB_ROOT_PASSWORD}
+          #  failureThreshold: 10
+          #  initialDelaySeconds: 5
+          #  periodSeconds: 5
           ports:
             - containerPort: 3306
               name: fineractmysql
