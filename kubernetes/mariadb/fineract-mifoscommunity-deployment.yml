@@ -84,9 +84,9 @@ spec:
         - name: TZ
           value: America/Mexico_City
         - name: FINERACT_API_URLS
-          value: https://sandbox.mifos.community
+          value: https://fineract.mifos.local
         - name: FINERACT_API_URL
-          value: https://sandbox.mifos.community
+          value: https://fineract.mifos.local
         - name: FINERACT_API_PROVIDER
           value: /fineract-provider/api
         - name: FINERACT_API_VERSION
