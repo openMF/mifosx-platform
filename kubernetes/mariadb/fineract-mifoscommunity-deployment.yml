@@ -81,16 +81,26 @@ spec:
         #  initialDelaySeconds: 90
         #  periodSeconds: 1
         env:
-        - name: FINERACT_PLATFORM_TENANT_IDENTIFIER 
-          value: default 
+        - name: TZ
+          value: America/Mexico_City
+        - name: FINERACT_API_URLS
+          value: https://sandbox.mifos.community
+        - name: FINERACT_API_URL
+          value: https://sandbox.mifos.community
         - name: FINERACT_API_PROVIDER
           value: /fineract-provider/api
-        - name: FINERACT_API_VERSION 
-          value: /v1 
+        - name: FINERACT_API_VERSION
+          value: /v1
+        - name: FINERACT_PLATFORM_TENANT_IDENTIFIER
+          value: default
         - name: MIFOS_DEFAULT_LANGUAGE
-          value: en-US 
-        - name: FINERACT_API_URL
-          value: https://fineract-server:8443 
+          value: en-US
+        - name: MIFOS_SUPPORTED_LANGUAGES
+          value: cs-CS,de-DE,en-US,es-MX,fr-FR,it-IT,ko-KO,li-LI,lv-LV,ne-NE,pt-PT,sw-SW
+        - name: MIFOS_PRELOAD_CLIENTS
+          value: "true"
+        - name: MIFOS_DEFAULT_CHAR_DELIMITER
+          value: ","        
         ports:
         - containerPort: 80
           name: mifos-webapp
