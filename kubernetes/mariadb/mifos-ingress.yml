@@ -10,9 +10,9 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: fineract-server
+            name: mifos-webapp
             port:
-              number: 8443
+              number: 80
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -53,6 +53,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: fineract-server  # Replace with your actual service name
+                name: mifos-webapp  # Replace with your actual service name
                 port:
                   number: 80         # Default Spring Boot port              
