@@ -40,9 +40,9 @@ spec:
   ingressClassName: nginx  # Change to your ingress class (e.g., nginx, traefik, alb)
 
   # TLS Configuration (optional but recommended)
-  #tls:
-  #  - hosts:
-  #      - fineract.example.com
+  tls:
+    - hosts:
+        - fineract.example.com
   #    secretName: fineract-tls-secret  # Must be a valid tls secret with cert & key
 
   rules:
