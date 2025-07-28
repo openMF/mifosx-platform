@@ -19,6 +19,8 @@
 #
 
 microk8s kubectl delete secret fineract-tenants-db-secret
+microk8s kubectl delete -f webapp-ingress.yml
+microk8s kubectl delete -f fineract-ingress.yml
 microk8s kubectl delete -f fineractmysql-configmap.yml
 microk8s kubectl delete -f fineractmysql-deployment.yml
 microk8s kubectl delete -f fineract-server-deployment.yml

@@ -22,6 +22,10 @@ echo "Setting Up Fineract service configuration..."
 microk8s kubectl create secret generic fineract-tenants-db-secret --from-literal=username=root --from-literal=password=$(head /dev/urandom | LC_CTYPE=C tr -dc A-Za-z0-9 | head -c 16)
 microk8s kubectl apply -f fineractmysql-configmap.yml
 
+echo "Setting Up Mifos X Ingress configuration..."
+microk8s kubectl apply -f webapp-ingress.yml
+microk8s kubectl apply -f fineract-ingress.yml
+
 echo
 echo "Starting fineractmysql..."
 microk8s kubectl apply -f fineractmysql-deployment.yml
