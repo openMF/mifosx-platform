@@ -42,11 +42,11 @@ spec:
   # TLS Configuration (optional but recommended)
   tls:
     - hosts:
-        - fineract.example.com
+        - demo.mifos.local
   #    secretName: fineract-tls-secret  # Must be a valid tls secret with cert & key
 
   rules:
-    - host: fineract.example.com
+    - host: demo.mifos.local
       http:
         paths:
           - path: /
@@ -55,4 +55,4 @@ spec:
               service:
                 name: fineract-server  # Replace with your actual service name
                 port:
-                  number: 8443         # Default Spring Boot port              
+                  number: 80         # Default Spring Boot port              
