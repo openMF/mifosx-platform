@@ -35,7 +35,7 @@ cd mifosx-platform/kubernetes/postgresql
 ```
 
 ## Access
-Before accesing the Mifos X admin UI you have to add the following records on your /etc/hosts file
+Before accesing the Mifos X admin UI you have to add the following records in your /etc/hosts file
 ```console
 <YOUR_KUBERNETES_SERVER_IP>   webapp.mifos.local fineract.mifos.local
 ```
