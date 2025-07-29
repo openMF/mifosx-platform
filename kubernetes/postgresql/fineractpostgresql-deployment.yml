@@ -20,7 +20,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: fineractpostgresql-pv-volume
+  name: fineractdb-pv-volume
   labels:
     type: local
 spec:
@@ -37,7 +37,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: fineractpostgresql-pv-claim
+  name: fineractdb-pv-claim
 spec:
   storageClassName: manual
   accessModes:
@@ -53,7 +53,7 @@ kind: Service
 metadata:
   labels:
     app: fineract-server
-  name: fineractpostgresql
+  name: fineractdb
 spec:
   ports:
     - protocol: TCP
@@ -61,7 +61,7 @@ spec:
       targetPort: 3306
   selector:
     app: fineract-server
-    tier: fineractpostgresql
+    tier: fineractdb
   clusterIP: None
 
 ---
@@ -71,19 +71,19 @@ kind: Deployment
 metadata:
   labels:
     app: fineract-server
-  name: fineractpostgresql
+  name: fineractdb
 spec:
   selector:
     matchLabels:
       app: fineract-server
-      tier: fineractpostgresql
+      tier: fineractdb
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
         app: fineract-server
-        tier: fineractpostgresql
+        tier: fineractdb
     spec:
       containers:
         - image: mariadb:11.0
@@ -117,16 +117,16 @@ spec:
           #  periodSeconds: 5
           ports:
             - containerPort: 3306
-              name: fineractpostgresql
+              name: fineractdb
           volumeMounts:
-            - name: fineractpostgresql-initdb
+            - name: fineractdb-initdb
               mountPath: /docker-entrypoint-initdb.d/
-            #- name: fineractpostgresql-persistent-storage
+            #- name: fineractdb-persistent-storage
             #  mountPath: /var/lib/postgresql/
       volumes:
-        - name: fineractpostgresql-initdb
+        - name: fineractdb-initdb
           configMap:
-            name: fineractpostgresql-initdb
-        - name: fineractpostgresql-persistent-storage
+            name: fineractdb-initdb
+        - name: fineractdb-persistent-storage
           persistentVolumeClaim:
-            claimName: fineractpostgresql-pv-claim
+            claimName: fineractdb-pv-claim

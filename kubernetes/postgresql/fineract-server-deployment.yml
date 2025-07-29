@@ -57,7 +57,7 @@ spec:
       #initContainers:
       # - name: init-mydb
       #  image: busybox:1.28
-      # command: ['sh', '-c', 'echo -e "Checking for the availability of MYSQL server deployment"; while ! nc -z "fineractpostgresql" 3306; do sleep 1; printf "-"; done; echo -e " >> MYSQL server has started";']
+      # command: ['sh', '-c', 'echo -e "Checking for the availability of MYSQL server deployment"; while ! nc -z "fineractdb" 3306; do sleep 1; printf "-"; done; echo -e " >> MYSQL server has started";']
       containers:
       - name: fineract-server
         image: apache/fineract:latest
@@ -90,7 +90,7 @@ spec:
         - name: FINERACT_HIKARI_DRIVER_CLASS_NAME
           value: org.postgresql.Driver
         - name: FINERACT_HIKARI_JDBC_URL
-          value: jdbc:postgresql://fineractpostgresql:5432/fineract_tenants         
+          value: jdbc:postgresql://fineractdb:5432/fineract_tenants         
         - name: FINERACT_HIKARI_USERNAME
           valueFrom:
             secretKeyRef:
@@ -102,7 +102,7 @@ spec:
               name: fineract-tenants-db-secret
               key: password
         - name: FINERACT_DEFAULT_TENANTDB_HOSTNAME
-          value: fineractpostgresql
+          value: fineractdb
         - name: FINERACT_DEFAULT_TENANTDB_PORT
           value: '3306'
         - name: FINERACT_DEFAULT_TENANTDB_UID

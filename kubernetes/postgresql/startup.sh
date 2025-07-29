@@ -20,7 +20,7 @@
 
 echo "Setting Up Mifos X Service configuration..."
 microk8s kubectl create secret generic fineract-tenants-db-secret --from-literal=username=root --from-literal=password=$(head /dev/urandom | LC_CTYPE=C tr -dc A-Za-z0-9 | head -c 16)
-microk8s kubectl apply -f fineractpostgresql-configmap.yml
+microk8s kubectl apply -f fineractdb-configmap.yml
 
 echo "Setting Up Mifos X Ingress configuration..."
 microk8s kubectl apply -f mifos-webapp-ingress.yml
@@ -28,17 +28,17 @@ microk8s kubectl apply -f fineract-ingress.yml
 
 echo
 echo "Starting Postgresql Database..."
-microk8s kubectl apply -f fineractpostgresql-deployment.yml
+microk8s kubectl apply -f fineractdb-deployment.yml
 
-fineractpostgresql_pod=""
-while [[ ${#fineractpostgresql_pod} -eq 0 ]]; do
-    fineractpostgresql_pod=$(microk8s kubectl get pods -l tier=fineractpostgresql --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+fineractdb_pod=""
+while [[ ${#fineractdb_pod} -eq 0 ]]; do
+    fineractdb_pod=$(microk8s kubectl get pods -l tier=fineractdb --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 done
 
-fineractpostgresql_status=$(microk8s kubectl get pods ${fineractpostgresql_pod} --no-headers -o custom-columns=":status.phase")
-while [[ ${fineractpostgresql_status} -ne 'Running' ]]; do
+fineractdb_status=$(microk8s kubectl get pods ${fineractdb_pod} --no-headers -o custom-columns=":status.phase")
+while [[ ${fineractdb_status} -ne 'Running' ]]; do
     sleep 1
-    fineractpostgresql_status=$(microk8s kubectl get pods ${fineractpostgresql_pod} --no-headers -o custom-columns=":status.phase")
+    fineractdb_status=$(microk8s kubectl get pods ${fineractdb_pod} --no-headers -o custom-columns=":status.phase")
 done
 
 echo
