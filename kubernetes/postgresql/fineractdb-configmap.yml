@@ -20,7 +20,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: fineractmysql-initdb
+  name: fineractdb-initdb
   labels:
     app: fineract-server
 data:
