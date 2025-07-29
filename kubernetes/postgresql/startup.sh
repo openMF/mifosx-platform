@@ -23,7 +23,7 @@ microk8s kubectl create secret generic fineract-tenants-db-secret --from-literal
 microk8s kubectl apply -f fineractpostgresql-configmap.yml
 
 echo "Setting Up Mifos X Ingress configuration..."
-microk8s kubectl apply -f webapp-ingress.yml
+microk8s kubectl apply -f mifos-webapp-ingress.yml
 microk8s kubectl apply -f fineract-ingress.yml
 
 echo
@@ -59,16 +59,16 @@ done
 echo "Apache Fineract server is up and running"
 
 echo "Starting Mifos Web App (Admin UI)..."
-microk8s kubectl apply -f fineract-mifoscommunity-deployment.yml
+microk8s kubectl apply -f mifos-webapp-deployment.yml
 
-fineract_mifoscommunity_pod=""
-while [[ ${#fineract_mifoscommunity_pod} -eq 0 ]]; do
-    fineract_mifoscommunity_pod=$(microk8s kubectl get pods -l tier=backend --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+mifos_webapp_pod=""
+while [[ ${#mifos_webapp_pod} -eq 0 ]]; do
+    mifos_webapp_pod=$(microk8s kubectl get pods -l tier=backend --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 done
 
-fineract_mifoscommunity_status=$(microk8s kubectl get pods ${fineract_mifoscommunity_pod} --no-headers -o custom-columns=":status.phase")
-while [[ ${fineract_mifoscommunity_status} -ne 'Running' ]]; do
+mifos_webapp_status=$(microk8s kubectl get pods ${mifos_webapp_pod} --no-headers -o custom-columns=":status.phase")
+while [[ ${mifos_webapp_status} -ne 'Running' ]]; do
     sleep 1
-    fineract_mifoscommunity_status=$(microk8s kubectl get pods ${fineract_mifoscommunity_pod} --no-headers -o custom-columns=":status.phase")
+    mifos_webapp_status=$(microk8s kubectl get pods ${mifos_webapp_pod} --no-headers -o custom-columns=":status.phase")
 done
 echo "Mifos Web App (Admin UI) is up and running"
