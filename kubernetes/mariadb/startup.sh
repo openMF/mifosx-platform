@@ -27,7 +27,7 @@ microk8s kubectl apply -f webapp-ingress.yml
 microk8s kubectl apply -f fineract-ingress.yml
 
 echo
-echo "Starting fineractmysql..."
+echo "Starting MariaDB Database..."
 microk8s kubectl apply -f fineractmysql-deployment.yml
 
 fineractmysql_pod=""
@@ -42,7 +42,7 @@ while [[ ${fineractmysql_status} -ne 'Running' ]]; do
 done
 
 echo
-echo "Starting fineract server..."
+echo "Starting Apache Fineract server..."
 microk8s kubectl apply -f fineract-server-deployment.yml
 
 fineract_server_pod=""
@@ -56,9 +56,9 @@ while [[ ${fineract_server_status} -ne 'Running' ]]; do
     fineract_server_status=$(microk8s kubectl get pods ${fineract_server_pod} --no-headers -o custom-columns=":status.phase")
 done
 
-echo "Fineract server is up and running"
+echo "Apache Fineract server is up and running"
 
-echo "Starting Mifos Community UI..."
+echo "Starting Mifos Web App (Admin UI)..."
 microk8s kubectl apply -f fineract-mifoscommunity-deployment.yml
 
 fineract_mifoscommunity_pod=""
@@ -71,4 +71,4 @@ while [[ ${fineract_mifoscommunity_status} -ne 'Running' ]]; do
     sleep 1
     fineract_mifoscommunity_status=$(microk8s kubectl get pods ${fineract_mifoscommunity_pod} --no-headers -o custom-columns=":status.phase")
 done
-echo "Mifos Community UI is up and running"
+echo "Mifos Web App (Admin UI) is up and running"
