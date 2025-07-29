@@ -1,36 +1,307 @@
 #!/bin/bash
 
+# Function to install curl
+install_curl() {
+  echo "➡️ Installing curl..."
+  if [[ $(uname) == "Darwin" ]]; then
+    # Running on macOS
+    if ! command -v brew &>/dev/null; then
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || eval "$(/usr/local/bin/brew shellenv)"
+    fi
+    brew install curl
+  else
+    # Assuming Linux
+    sudo apt-get update
+    sudo apt-get install curl -y
+  fi
+}
+
+# Function to install docker
+install_docker(){
+  echo "➡️ Installing docker..."
+  # Uninstall conflicting packages
+  echo "🧹 Removing conflicting Docker-related packages..."
+  for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
+    sudo apt-get remove -y "$pkg" 2>/dev/null || true
+  done
+  if [[ $(uname) == "Darwin" ]]; then
+    # Running on macOS
+    echo "❗ Docker Engine cannot run natively on macOS without a VM."
+    echo "💡 Docker Desktop provides a full environment (Docker Engine, CLI, Compose, etc.) via a lightweight VM."
+    echo "➡️ Official download page: https://docs.docker.com/desktop/install/mac/"
+    
+    read -p "❓ Would you like to download Docker Desktop automatically now? (Y/n) " answer
+    if [ "$answer" != "n" ]; then
+      echo "⬇️ Downloading Docker Desktop installer..."
+
+      ARCH=$(uname -m)
+        if [[ "$ARCH" == "arm64" ]]; then
+        # Mac with Apple Silicon (M1, M2, M3)
+        DMG_URL="https://desktop.docker.com/mac/main/arm64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-arm64"
+        else
+        # Mac with Intel chip (x86_64 = amd64)
+        DMG_URL="https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-amd64"
+        fi
+
+      curl -L -o Docker.dmg "$DMG_URL" || {
+        echo "❌ Failed to download Docker.dmg"
+        exit 1
+      }
+      echo "✅ Docker.dmg has been downloaded successfully."
+
+      echo "📦 Mounting the DMG file..."
+      sudo hdiutil attach Docker.dmg || {
+        echo "❌ Failed to mount Docker.dmg"
+        exit 1
+      }
+
+      echo "⚙️ Installing Docker Desktop into /Applications..."
+      sudo /Volumes/Docker/Docker.app/Contents/MacOS/install || {
+        echo "❌ Docker installation failed"
+        sudo hdiutil detach /Volumes/Docker
+        exit 1
+      }
+
+      echo "🔌 Unmounting the DMG..."
+      sudo hdiutil detach /Volumes/Docker || {
+        echo "⚠️ Failed to unmount the volume"
+      }
+
+      echo "🚀 Launching Docker Desktop..."
+      open -a Docker || {
+        echo "⚠️ Could not launch Docker Desktop"
+      }
+      echo "🚀 Docker Desktop has been launched. If this is your first time, please authorize it manually in the pop-up or in System Preferences > Security & Privacy."
+
+      echo "⏳ Waiting for Docker to become available..."
+      while ! docker info >/dev/null 2>&1; do
+        echo "⏳ Waiting for Docker to start..."
+        sleep 2
+      done
+
+      echo "✅ Docker is running and ready to use."
+    else
+      echo "🔁 Once installed manually, start Docker Desktop and use the CLI as usual."
+      exit 1
+    fi
+  else
+    # Assuming Linux
+    echo "📦 Installing Docker from official Docker repo..."
+    sudo apt-get update
+    sudo apt-get install -y ca-certificates
+    # Add Docker’s official GPG key
+    sudo install -m 0755 -d /etc/apt/keyrings 2>/dev/null || true
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+    # Set up the repository
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    # Install Docker packages
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    # Add user to docker group
+    sudo groupadd docker 2>/dev/null || true
+    sudo usermod -aG docker "$USER" || true
+
+    # Apply group change in current shell
+    newgrp docker <<EONG
+echo "✅ Docker is installed and group membership applied in this session."
+EONG
+  fi
+}
+
+# Funtion to install docker compose plugin
+install_docker_compose(){
+  echo "➡️ Installing Docker Compose plugin..."
+
+  if [[ $(uname) == "Darwin" ]]; then
+    # macOS
+    if docker compose version &>/dev/null; then
+      echo "✅ Docker Compose is already available on macOS (via Docker Desktop)."
+    else
+      echo "❌ 'docker compose' is not available. Make sure Docker Desktop is installed and running."
+      exit 1
+    fi
+  else
+    # Assuming Linux
+    sudo apt-get update
+    sudo apt-get install -y docker-compose-plugin
+    echo "✅ Docker Compose plugin installed on Linux."
+  fi
+}
+
+# Function to start Docker
+start_docker() {
+  if [[ $(uname) == "Darwin" ]]; then
+    echo "🚀 Launching Docker Desktop..."
+    open -a Docker || {
+      echo "⚠️ Could not launch Docker Desktop"
+    }
+  else
+    echo "🚀 Starting Docker service..."
+    sudo systemctl start docker
+  fi
+}
+
+# Function to Install/Update docker-compose
+install_docker_stand_alone(){
+  echo "⬇️ Downloading latest docker-compose version..."
+  if sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose; then
+    sudo chmod +x /usr/local/bin/docker-compose
+  else
+    echo "❌ Failed to download docker-compose binary."
+    exit 1
+  fi
+}
+
 echo "🔧 Checking dependencies..."
+if ! command -v curl &>/dev/null; then
+  echo -e "\t❌ Curl is not installed or not in PATH.\n\t\tOn macOS: brew install curl\n\t\tOn Linux: sudo apt install curl"
+  read -p "❓ Would you like to install it automatically? (Y/n) " answer
+  if [ "$answer" != "n" ]; then
+    install_curl
+    if command -v curl &>/dev/null; then
+      curl_version=$(curl --version | head -n 1 | awk '{print $2}')
+      echo "✅ curl is already installed (version $curl_version)"
+    else
+      echo "❌ curl installation failed or still not available in PATH."
+      exit 1
+    fi
+  else
+    echo "❌ curl is required to continue. Exiting..."
+    exit 1
+  fi
+fi
 if ! command -v docker &>/dev/null; then
   echo -e "\t❌ Docker is not installed or not in PATH. Please install Docker first.\n\t\tSee https://docs.docker.com/get-docker/"
-  exit 1
+  read -p "❓ Would you like to install it automatically? (Y/n) " answer
+  if [ "$answer" != "n" ]; then
+    install_docker
+    if command -v docker &>/dev/null; then
+      docker_version=$(docker --version | head -n 1 | awk '{print $3}')
+      echo "✅ Docker is now installed (version $docker_version)."
+    else
+      echo "❌ Docker installation failed or still not available in PATH."
+      exit 1
+    fi
+  else
+    echo "❌ Docker is required to continue. Exiting..."
+    exit 1
+  fi
 fi
+
+
+# Check if docker is started
+if ! systemctl is-active --quiet docker; then
+  echo -e "\t❌ Docker is not running.\n\t\tPlease start Docker Desktop, Docker or check documentation at https://docs.docker.com/config/daemon/start/"
+  read -p "❓ Would you like to try starting Docker automatically? (Y/n) " answer
+  if [ "$answer" != "n" ]; then
+    start_docker
+    
+    timeout=60
+    elapsed=0
+
+    echo "⏳ Waiting for Docker to start (timeout: ${timeout}s)..."
+
+    until docker info &>/dev/null; do
+      sleep 2
+      elapsed=$((elapsed + 2))
+      if [ "$elapsed" -ge "$timeout" ]; then
+        echo "❌ Timeout reached. Docker did not start within $timeout seconds."
+        exit 1
+      fi
+    done
+    echo "✅ Docker is now running."
+  else
+    echo "❌ Docker must be running to continue. Exiting..."
+    exit 1
+  fi
+fi
+
 # Check if docker compose plugin is installed
 if ! docker compose version &>/dev/null; then
   echo -e "\t❌ Docker Compose is not installed or not in PATH (n.b. docker-compose is deprecated)\n\t\tUpdate docker or install docker-compose-plugin\n\t\tOn Linux: sudo apt-get install docker-compose-plugin\n\t\tSee https://docs.docker.com/compose/install/"
-  exit 1
-fi
-# Check if docker is started
-if ! docker info &>/dev/null; then
-  echo -e "\t❌ Docker is not running.\n\t\tPlease start Docker Desktop, Docker or check documentation at https://docs.docker.com/config/daemon/start/"
-  exit 1
-fi
-if ! command -v curl &>/dev/null; then
-  echo -e "\t❌ Curl is not installed or not in PATH.\n\t\tOn macOS: brew install curl\n\t\tOn Linux: sudo apt install curl"
-  exit 1
+  read -p "❓ Would you like to install it automatically? (Y/n) " answer
+  if [ "$answer" != "n" ]; then
+    install_docker_compose
+    if docker compose version &>/dev/null; then
+      docker_compose_version=$(docker compose version --short 2>/dev/null || docker compose --version | awk '{print $3}')
+      echo "✅ docker compose plugin is already installed (version $docker_compose_version)"
+    else
+      echo "❌ docker compose plugin installation failed or still not available in PATH."
+      exit 1
+    fi
+  else
+    echo "❌ docker compose plugin is required to continue. Exiting..."
+    exit 1
+  fi
 fi
 
 # Check if docker compose version is >= 2
-if [ "$(docker compose version --short | cut -d' ' -f3 | cut -d'.' -f1)" -lt 2 ]; then
-  echo -e "\t❌ Docker Compose is outdated. Please update Docker Compose to version 2 or higher.\n\t\tSee https://docs.docker.com/compose/install/linux/"
-  exit 1
-fi
-# Check if docker-compose is installed, if so issue a warning if version is < 2
-if command -v docker-compose &>/dev/null; then
-  if [ "$(docker-compose version --short | cut -d' ' -f3 | cut -d'.' -f1)" -lt 2 ]; then
-    echo -e "\n\t⚠️ 'docker-compose' is installed but outdated. Make sure to use 'docker compose' or to upgrade 'docker-compose' to version 2.\n\t\tSee https://docs.docker.com/compose/install/standalone/\n"
+compose_major_version=$(docker compose version --short | cut -d'.' -f1)
+if [ "$compose_major_version" -lt 2 ]; then
+  echo -e "\t❌ Docker Compose is outdated. Please update to version 2 or higher.\n\t\tSee https://docs.docker.com/compose/install/"
+  read -p "❓ Would you like to update it automatically? (Y/n) " answer
+  if [ "$answer" != "n" ]; then
+    install_docker_compose
+    compose_major_version=$(docker compose version --short | cut -d'.' -f1)
+    if [ "$compose_major_version" -ge 2 ]; then
+      docker_compose_version=$(docker compose version --short 2>/dev/null || docker compose --version | awk '{print $3}')
+      echo "✅ Docker Compose plugin has been updated (version $docker_compose_version)."
+    else
+      echo "❌ Docker Compose plugin update failed or the required version is still not available."
+      exit 1
+    fi
+  else
+    echo "❌ A compatible version of Docker Compose (2.x or higher) is required to continue. Exiting..."
+    exit 1
   fi
 fi
+
+# Check if docker-compose is installed, if so issue a warning if version is < 2
+if ! command -v docker-compose &>/dev/null; then
+  echo "⬇️ 'docker-compose' not found."
+  read -p "❓ Would you like to install it automatically? (Y/n) " answer
+  if [ "$answer" != "n" ]; then
+    install_docker_stand_alone
+    if command -v docker-compose &>/dev/null; then
+      version=$(docker-compose version --short)
+      echo "✅ 'docker-compose' installed successfully (version $version)."
+    else
+      echo "❌ Failed to install 'docker-compose'."
+      exit 1
+    fi
+  else
+    echo -e "\n\t⚠️  'docker-compose' is not installed. Some optional features may not be available."
+  fi
+else
+  compose_legacy_version=$(docker-compose version --short)
+  compose_legacy_major=$(echo "$compose_legacy_version" | cut -d'.' -f1)
+
+  if [ "$compose_legacy_major" -lt 2 ]; then
+    echo -e "\n\t⚠️  'docker-compose' is installed but outdated (version $compose_legacy_version)."
+    echo -e "\t📚 See: https://docs.docker.com/compose/install/standalone/\n"
+
+    read -p "❓ Would you like to update 'docker-compose' now? (Y/n) " answer
+    if [ "$answer" != "n" ]; then
+      install_docker_stand_alone
+      if command -v docker-compose &>/dev/null; then
+        new_version=$(docker-compose version --short)
+        echo "✅ 'docker-compose' has been updated to version $new_version."
+      else
+        echo "❌ Failed to update 'docker-compose'."
+        exit 1
+      fi
+    else
+      echo "🔁 You can update or remove 'docker-compose' manually later."
+    fi
+  else
+    echo "✅ 'docker-compose' standalone is already installed and up to date (version $compose_legacy_version)."
+  fi
+fi
+
 
 # Catch errors
 set -e
@@ -232,20 +503,21 @@ else
   docker compose up -d
   # Check if port is listening
   echo "Waiting for server to be healthy, it might take a few minutes while we initialize the database..."
-  # Tail logs of the server until it's ready
-  # Start logs with timeout (will automatically stop after N seconds)
-  #docker compose logs -f fineract-server &
-  timeout 110 docker compose logs -f fineract-server &
-  pid=$!
   
   # Fixed: Use correct container name based on directory
-  container_name=$(docker compose ps -q fineract-server)
-  if [ -z "$container_name" ]; then
+  container_id=$(docker compose ps -q fineract-server)
+  if [ -z "$container_id" ]; then
     echo "❌ Could not find fineract-server container"
     exit 1
   fi
   
-  while [ "$(docker inspect --format='{{.State.Health.Status}}' $container_name 2>/dev/null)" != "healthy" ]; do
+  # Tail logs of the server until it's ready
+  # Start logs with timeout (will automatically stop after N seconds)
+  #docker compose logs -f fineract-server &
+  docker compose logs -f fineract-server &
+  log_pid=$!
+  
+  while [ "$(docker inspect --format='{{.State.Health.Status}}' "$container_id" 2>/dev/null)" != "healthy" ]; do
     sleep 1
   done
   # Kill the logs process if still running
