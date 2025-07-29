@@ -27,7 +27,7 @@ microk8s kubectl apply -f webapp-ingress.yml
 microk8s kubectl apply -f fineract-ingress.yml
 
 echo
-echo "Starting MariaDB Database..."
+echo "Starting Postgresql Database..."
 microk8s kubectl apply -f fineractpostgresql-deployment.yml
 
 fineractpostgresql_pod=""
