@@ -57,7 +57,7 @@ spec:
       #initContainers:
       # - name: init-mydb
       #  image: busybox:1.28
-      # command: ['sh', '-c', 'echo -e "Checking for the availability of Postgres server deployment"; while ! nc -z "fineractdb" 3306; do sleep 1; printf "-"; done; echo -e " >> Postgres server has started";']
+      # command: ['sh', '-c', 'echo -e "Checking for the availability of Postgres server deployment"; while ! nc -z "fineractdb" 5432; do sleep 1; printf "-"; done; echo -e " >> Postgres server has started";']
       containers:
       - name: fineract-server
         image: apache/fineract:latest
@@ -104,7 +104,7 @@ spec:
         - name: FINERACT_DEFAULT_TENANTDB_HOSTNAME
           value: fineractdb
         - name: FINERACT_DEFAULT_TENANTDB_PORT
-          value: '3306'
+          value: '5432'
         - name: FINERACT_DEFAULT_TENANTDB_UID
           valueFrom:
             secretKeyRef:

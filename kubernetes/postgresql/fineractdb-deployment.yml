@@ -57,8 +57,8 @@ metadata:
 spec:
   ports:
     - protocol: TCP
-      port: 3306
-      targetPort: 3306
+      port: 5432
+      targetPort: 5432
   selector:
     app: fineract-server
     tier: fineractdb
@@ -86,7 +86,7 @@ spec:
         tier: fineractdb
     spec:
       containers:
-        - image: mariadb:11.0
+        - image: postgres:17.5
           name: postgresql
           resources:
             requests:
@@ -116,7 +116,7 @@ spec:
           #  initialDelaySeconds: 5
           #  periodSeconds: 5
           ports:
-            - containerPort: 3306
+            - containerPort: 5432
               name: fineractdb
           volumeMounts:
             - name: fineractdb-initdb
