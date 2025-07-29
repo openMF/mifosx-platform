@@ -12,7 +12,7 @@ spec:
           service:
             name: fineract-server
             port:
-              number: 8443
+              number: 8080
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -56,4 +56,4 @@ spec:
               service:
                 name: fineract-server  # Replace with your actual service name
                 port:
-                  number: 8443         # Default Spring Boot port              
+                  number: 8080         # Default Spring Boot port              

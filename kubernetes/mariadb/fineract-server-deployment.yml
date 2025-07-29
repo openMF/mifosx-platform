@@ -26,8 +26,8 @@ metadata:
 spec:
   ports:
   - protocol: TCP
-    port: 8443
-    targetPort: 8443
+    port: 8080
+    targetPort: 8080
   selector:
     app: fineract-server
     tier: backend
@@ -84,9 +84,9 @@ spec:
         - name: FINERACT_NODE_ID
           value: '1'
         - name: FINERACT_SERVER_SSL_ENABLED
-          value: 'true'
+          value: 'false'
         - name: FINERACT_SERVER_PORT
-          value: '8443'
+          value: '8080'
         - name: FINERACT_HIKARI_DRIVER_CLASS_NAME
           value: org.mariadb.jdbc.Driver
         - name: FINERACT_HIKARI_JDBC_URL
