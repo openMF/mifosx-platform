@@ -24,8 +24,8 @@ metadata:
   labels:
     app: fineract-server
 data:
-  init.sql: |
-    psql -v ON_ERROR_STOP=1 --username postgres --dbname "$POSTGRES_DB" <<-EOSQL      
+  01-init.sh: |
+    psql -v ON_ERROR_STOP=1 --username postgres --dbname postgres <<-EOSQL      
       CREATE DATABASE fineract_tenants;
       CREATE DATABASE fineract_default;
       GRANT ALL PRIVILEGES ON DATABASE fineract_tenants TO postgres;
@@ -35,3 +35,4 @@ data:
       \c fineract_default
       GRANT ALL ON SCHEMA public TO postgres;
     EOSQL
+ 
