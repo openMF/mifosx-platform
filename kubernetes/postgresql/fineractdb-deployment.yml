@@ -120,7 +120,7 @@ spec:
               name: fineractdb
           volumeMounts:
             - name: fineractdb-initdb
-              mountPath: /docker-entrypoint-initdb.d/01-init.sh:Z,ro
+              mountPath: /docker-entrypoint-initdb.d/
             #- name: fineractdb-persistent-storage
             #  mountPath: /var/lib/postgresql/
       volumes:
