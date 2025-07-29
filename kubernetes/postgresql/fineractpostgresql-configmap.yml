@@ -20,12 +20,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: fineractpostgresql-initdb
+  name: fineractmysql-initdb
   labels:
     app: fineract-server
 data:
   init.sql: |
-
     psql -v ON_ERROR_STOP=1 --username postgres --dbname "$POSTGRES_DB" <<-EOSQL      
       CREATE DATABASE fineract_tenants;
       CREATE DATABASE fineract_default;

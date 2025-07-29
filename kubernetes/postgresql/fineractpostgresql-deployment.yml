@@ -86,8 +86,8 @@ spec:
         tier: fineractpostgresql
     spec:
       containers:
-        - image: postgres:17.5
-          name: postgres
+        - image: mariadb:11.0
+          name: postgresql
           resources:
             requests:
               memory: "1Gi"
@@ -101,27 +101,28 @@ spec:
                 secretKeyRef:
                   name: fineract-tenants-db-secret
                   key: password
-          livenessProbe:
-            exec:              
-              command: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "postgres" ]
-            failureThreshold: 10
-            timeoutSeconds: 10
-          readinessProbe:
-            exec:
-              command:
-                - CMD 
-                - pg_isready -q -d postgres -U postgres              
-            failureThreshold: 10
-            initialDelaySeconds: 5
-            periodSeconds: 5
+          #livenessProbe:
+          #  exec:
+          #    command: ["sh","-c","postgresqladmin ping -h localhost -uroot -p${POSTGRES_PASSWORD}"]
+          #  failureThreshold: 10
+          #  timeoutSeconds: 10
+          #readinessProbe:
+          #  exec:
+          #    command:
+          #      - sh
+          #      - -c
+          #      - postgresqladmin ping -uroot -p${POSTGRES_PASSWORD}
+          #  failureThreshold: 10
+          #  initialDelaySeconds: 5
+          #  periodSeconds: 5
           ports:
-            - containerPort: 5432
+            - containerPort: 3306
               name: fineractpostgresql
           volumeMounts:
             - name: fineractpostgresql-initdb
               mountPath: /docker-entrypoint-initdb.d/
-            - name: fineractpostgresql-persistent-storage
-              mountPath: /var/lib/mysql/
+            #- name: fineractpostgresql-persistent-storage
+            #  mountPath: /var/lib/postgresql/
       volumes:
         - name: fineractpostgresql-initdb
           configMap:

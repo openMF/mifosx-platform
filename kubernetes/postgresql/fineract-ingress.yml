@@ -1,0 +1,77 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements. See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership. The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: http-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fineract-server
+            port:
+              number: 8080
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mifos-fineract-ingress
+  #namespace: fineract
+  annotations:
+    # Example: NGINX Ingress Controller annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Host $host;
+    # Enable HTTPS redirect
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Optional: CORS (if needed for API access)
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "fineract-platform-tenantid,sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,Accept,Accept-Encoding,Accept-Language,Access-Control-Request-Headers,Access-Control-Request-Method,Origin,Priority,Referer,Sec-Fetch-Dest,Sec-Fetch-Mode,Sec-Fetch-Site"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    #Disable in production
+    nginx.ingress.kubernetes.io/secure-backup-verify: "false" 
+
+spec:
+  # Optional: Specify ingress class (required in K8s 1.18+)
+  ingressClassName: nginx  # Change to your ingress class (e.g., nginx, traefik, alb)
+
+  # TLS Configuration (optional but recommended)
+  tls:
+    - hosts:
+        - fineract.mifos.local
+  #    secretName: fineract-tls-secret  # Must be a valid tls secret with cert & key
+
+  rules:
+    - host: fineract.mifos.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fineract-server  # Replace with your actual service name
+                port:
+                  number: 8080         # Default Spring Boot port              
