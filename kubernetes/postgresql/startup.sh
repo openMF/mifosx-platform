@@ -19,7 +19,7 @@
 #
 
 echo "Setting Up Mifos X Service configuration..."
-microk8s kubectl create secret generic fineract-tenants-db-secret --from-literal=username=root --from-literal=password=$(head /dev/urandom | LC_CTYPE=C tr -dc A-Za-z0-9 | head -c 16)
+microk8s kubectl create secret generic fineract-tenants-db-secret --from-literal=username=postgres --from-literal=password=$(head /dev/urandom | LC_CTYPE=C tr -dc A-Za-z0-9 | head -c 16)
 microk8s kubectl apply -f fineractdb-configmap.yml
 
 echo "Setting Up Mifos X Ingress configuration..."

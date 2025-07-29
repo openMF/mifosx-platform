@@ -87,7 +87,7 @@ spec:
           value: 'false'
         - name: FINERACT_SERVER_PORT
           value: '8080'
-        - name: FINERACT_HIKARI_DRIVER_CLASS_NAME
+        - name: FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME
           value: org.mariadb.jdbc.Driver
         - name: FINERACT_HIKARI_JDBC_URL
           value: jdbc:mariadb://fineractmysql:3306/fineract_tenants
