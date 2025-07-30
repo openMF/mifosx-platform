@@ -108,6 +108,8 @@ install_docker(){
     # Apply group change in current shell
     newgrp docker <<EONG
 echo "✅ Docker is installed and group membership applied."
+echo "⚠️ To use Docker without 'sudo', you need to log out and log back in or restart your session."
+read -p "Press Enter to continue..."
 EONG
   fi
 }
