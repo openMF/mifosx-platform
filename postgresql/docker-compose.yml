@@ -38,7 +38,7 @@ services:
     volumes:
       - ./fineract-server/data:/data
     healthcheck:
-      test: ["CMD", 'sh', '-c', 'echo -e "Checking for the availability of Fineract server deployment"; while ! nc -z "fineract-server" ${FINERACT_PORT:-3000}; do sleep 1; printf "-"; done; echo -e " >> Fineract server has started";' ]
+      test: ["CMD", 'sh', '-c', 'echo -e "Checking for the availability of Fineract server deployment"; while ! nc -z "fineract-server" 8080; do sleep 1; printf "-"; done; echo -e " >> Fineract server has started";' ]
       timeout: 10s
       retries: 10
     ports:
