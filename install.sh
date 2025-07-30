@@ -107,7 +107,7 @@ install_docker(){
 
     # Apply group change in current shell
     newgrp docker <<EONG
-echo "✅ Docker is installed and group membership applied in this session."
+echo "✅ Docker is installed and group membership applied."
 EONG
   fi
 }
@@ -500,7 +500,12 @@ if [ "$answer" = "n" ]; then
   exit 0
 else
   echo "🐳 Starting Docker containers..."
-  sudo docker compose up -d
+  if [[ $(uname) == "Darwin" ]]; then
+    docker compose up -d
+  else
+    sg docker -c "docker compose up -d"  
+  fi
+  
   # Check if port is listening
   echo "Waiting for server to be healthy, it might take a few minutes while we initialize the database..."
   
@@ -514,8 +519,13 @@ else
   # Tail logs of the server until it's ready
   # Start logs with timeout (will automatically stop after N seconds)
   #docker compose logs -f fineract-server &
-  sudo docker compose logs -f fineract-server &
-  log_pid=$!
+  if [[ $(uname) == "Darwin" ]]; then
+    docker compose logs -f fineract-server &
+    log_pid=$!
+  else
+    sg docker -c "docker compose logs -f fineract-server" &
+    log_pid=$!
+  fi
   
   while [ "$(docker inspect --format='{{.State.Health.Status}}' "$container_id" 2>/dev/null)" != "healthy" ]; do
     sleep 1
