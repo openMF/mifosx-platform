@@ -500,7 +500,7 @@ if [ "$answer" = "n" ]; then
   exit 0
 else
   echo "🐳 Starting Docker containers..."
-  docker compose up -d
+  sudo docker compose up -d
   # Check if port is listening
   echo "Waiting for server to be healthy, it might take a few minutes while we initialize the database..."
   
@@ -514,7 +514,7 @@ else
   # Tail logs of the server until it's ready
   # Start logs with timeout (will automatically stop after N seconds)
   #docker compose logs -f fineract-server &
-  docker compose logs -f fineract-server &
+  sudo docker compose logs -f fineract-server &
   log_pid=$!
   
   while [ "$(docker inspect --format='{{.State.Health.Status}}' "$container_id" 2>/dev/null)" != "healthy" ]; do
