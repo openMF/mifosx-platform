@@ -98,16 +98,15 @@ spec:
               value: "true" 
             - name:  FINERACT_LIQUIBASE_ENABLED
               value: "false"
-          #image: openmf/fineract:develop
-          #image: openmf/fineract:1.11
-          image: openmf/fineract:1.11.0
+          # image: openmf/fineract:develop
+          image: mifos-docker-hub.jfrog.io/openmf/fineract:1.11.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
               path: /fineract-provider/actuator/health/liveness
               port: 8080
             initialDelaySeconds: 180
-            periodSeconds: 1
+            periodSeconds: 10
             failureThreshold: 5
             timeoutSeconds: 2
           readinessProbe:
