@@ -20,6 +20,8 @@ spec:
     spec:
       containers:
         - env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms384m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
             - name: FINERACT_DEFAULT_TENANTDB_DESCRIPTION
               value: "Default Demo Tenant"
             - name: FINERACT_DEFAULT_TENANTDB_HOSTNAME
@@ -116,6 +118,13 @@ spec:
           ports:
             - containerPort: 8080
               protocol: TCP
+          # resources:
+          #   requests:
+          #     memory: "256Mi"
+          #     cpu: "200m"
+          #   limits:
+          #     memory: "1600Mi"
+          #     cpu: "500m"
           volumeMounts:
             - mountPath: /data
               name: fineract-server-claim0
