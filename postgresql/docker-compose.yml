@@ -18,7 +18,7 @@ services:
       - ${WEB_APP_PORT:-80}:80
   # Database service
   postgresql:
-    image: postgres:17.6
+    image: postgres:17.7
     volumes:
       #- ./fineract-server/data/01-init.sh:/docker-entrypoint-initdb.d/01-init.sh:Z,ro
       - ./01-init.sh:/docker-entrypoint-initdb.d/01-init.sh:Z,ro
