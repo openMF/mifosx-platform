@@ -18,7 +18,7 @@ services:
       - ${WEB_APP_PORT:-80}:80
   # Database service
   fineractmysql:
-    image: mariadb:11.8.5
+    image: mariadb:11.8.6
     ports:
       - 3308:3306
     volumes:
