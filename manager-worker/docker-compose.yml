@@ -1,0 +1,77 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:11.4
+    container_name: fineract-mariadb
+    restart: always
+    environment:
+      - MARIADB_USER=mifos
+      - MARIADB_PASSWORD=password
+      - MARIADB_DATABASE=fineract_default
+      - MARIADB_ROOT_PASSWORD=mysql
+    command: [
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+      '--explicit_defaults_for_timestamp=1',
+      '--lower_case_table_names=1'
+    ]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysql"]
+      interval: 10s
+      timeout: 10s # Increased timeout for heavy migrations
+      retries: 10
+
+  activemq:
+    image: apache/activemq-classic:latest
+    container_name: fineract-activemq
+    restart: always
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "61616"]
+
+  fineract: # Manager Node (Central Logic & Write Operations)
+    image: openmf/fineract:develop
+    container_name: fineract-app
+    depends_on:
+      db:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy
+    ports:
+      - "8443:8443"
+    environment:
+      - FINERACT_HIKARI_JDBC_URL=jdbc:mariadb://db:3306/fineract_default?serverTimezone=UTC&useLegacyDatetimeCode=false
+      - FINERACT_HIKARI_USERNAME=root
+      - FINERACT_HIKARI_PASSWORD=mysql
+      - FINERACT_MODE=WRITE 
+      - FINERACT_DB_MIGRATION_ENABLED=true
+      - FINERACT_REPORT_ENGINE_BIRT_ENABLED=true
+      - FINERACT_MESSAGING_ACTIVEMQ_BROKER_URL=tcp://activemq:61616
+
+  fineract-worker: # Replicated Worker (Reporting & Read Tasks)
+    image: openmf/fineract:develop
+    depends_on:
+      - fineract
+    environment:
+      - FINERACT_HIKARI_JDBC_URL=jdbc:mariadb://db:3306/fineract_default?serverTimezone=UTC&useLegacyDatetimeCode=false
+      - FINERACT_HIKARI_USERNAME=root
+      - FINERACT_HIKARI_PASSWORD=mysql
+      - FINERACT_MODE=READ 
+    deploy:
+      mode: replicated
+      replicas: 2 
+
+  mifos-web-app:  # [The Modern UI] New Angular-based Web App 
+    image: openmf/web-app:master
+    container_name: mifos-web-app
+    ports:
+      - "4200:80"
+    depends_on:
+      - fineract
+
+volumes:
+  fineract-data:
