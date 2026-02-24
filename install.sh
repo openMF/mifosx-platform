@@ -176,7 +176,7 @@ if ! command -v curl &>/dev/null; then
     exit 1
   fi
 fi
-#if ! command -v docker &>/dev/null; then
+if ! command -v docker &>/dev/null; then
   echo -e "\t❌ Docker is not installed or not in PATH. Please install Docker first.\n\t\tSee https://docs.docker.com/get-docker/"
   read -p "❓ Would you like to install it automatically? (Y/n) " answer
   if [ "$answer" != "n" ]; then
@@ -192,11 +192,11 @@ fi
     echo "❌ Docker is required to continue. Exiting..."
     exit 1
   fi
-#fi
+fi
 
 
 # Check if docker is started
-#if ! systemctl is-active --quiet docker; then
+if ! systemctl is-active --quiet docker; then
   echo -e "\t❌ Docker is not running.\n\t\tPlease start Docker Desktop, Docker or check documentation at https://docs.docker.com/config/daemon/start/"
   read -p "❓ Would you like to try starting Docker automatically? (Y/n) " answer
   if [ "$answer" != "n" ]; then
@@ -220,10 +220,10 @@ fi
     echo "❌ Docker must be running to continue. Exiting..."
     exit 1
   fi
-#fi
+fi
 
 # Check if docker compose plugin is installed
-#if ! docker compose version &>/dev/null; then
+if ! docker compose version &>/dev/null; then
   echo -e "\t❌ Docker Compose is not installed or not in PATH (n.b. docker-compose is deprecated)\n\t\tUpdate docker or install docker-compose-plugin\n\t\tOn Linux: sudo apt-get install docker-compose-plugin\n\t\tSee https://docs.docker.com/compose/install/"
   read -p "❓ Would you like to install it automatically? (Y/n) " answer
   if [ "$answer" != "n" ]; then
