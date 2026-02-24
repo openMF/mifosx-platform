@@ -176,7 +176,7 @@ if ! command -v curl &>/dev/null; then
     exit 1
   fi
 fi
-if ! command -v docker &>/dev/null; then
+#if ! command -v docker &>/dev/null; then
   echo -e "\t❌ Docker is not installed or not in PATH. Please install Docker first.\n\t\tSee https://docs.docker.com/get-docker/"
   read -p "❓ Would you like to install it automatically? (Y/n) " answer
   if [ "$answer" != "n" ]; then
@@ -192,11 +192,11 @@ if ! command -v docker &>/dev/null; then
     echo "❌ Docker is required to continue. Exiting..."
     exit 1
   fi
-fi
+#fi
 
 
 # Check if docker is started
-if ! systemctl is-active --quiet docker; then
+#if ! systemctl is-active --quiet docker; then
   echo -e "\t❌ Docker is not running.\n\t\tPlease start Docker Desktop, Docker or check documentation at https://docs.docker.com/config/daemon/start/"
   read -p "❓ Would you like to try starting Docker automatically? (Y/n) " answer
   if [ "$answer" != "n" ]; then
@@ -220,10 +220,10 @@ if ! systemctl is-active --quiet docker; then
     echo "❌ Docker must be running to continue. Exiting..."
     exit 1
   fi
-fi
+#fi
 
 # Check if docker compose plugin is installed
-if ! docker compose version &>/dev/null; then
+#if ! docker compose version &>/dev/null; then
   echo -e "\t❌ Docker Compose is not installed or not in PATH (n.b. docker-compose is deprecated)\n\t\tUpdate docker or install docker-compose-plugin\n\t\tOn Linux: sudo apt-get install docker-compose-plugin\n\t\tSee https://docs.docker.com/compose/install/"
   read -p "❓ Would you like to install it automatically? (Y/n) " answer
   if [ "$answer" != "n" ]; then
@@ -360,6 +360,10 @@ while true; do
   fi
 done
 
+# Define number of Worker nodes
+read -p "❓ How many Worker nodes would you like to deploy? (default: 0): " workers_count
+workers_count=${workers_count:-0}
+
 # Copy mifosx/packages/mifosx-docker/docker-compose.yml in it
 echo -e "\t• Copying docker-compose.yml for use with $dbtype"
 curl -sfLo docker-compose.yml https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/docker-compose.yml || {
@@ -492,6 +496,16 @@ else
   sed -i "s/^WEB_APP_PORT=.*/WEB_APP_PORT=$webAppPort/g" .env
   sed -E -i'' "s|^WEB_APP_URL=http://localhost:[0-9]+|WEB_APP_URL=http://localhost:$webAppPort|g" .env
 fi
+
+# Update Workers Count in .env
+if [[ $(uname) == "Darwin" ]]; then
+  # macOS
+  sed -i '' "s/^FINERACT_WORKERS_COUNT=.*/FINERACT_WORKERS_COUNT=$workers_count/g" .env
+else
+  # Linux
+  sed -i "s/^FINERACT_WORKERS_COUNT=.*/FINERACT_WORKERS_COUNT=$workers_count/g" .env
+fi
+echo -e "\t• Set FINERACT_WORKERS_COUNT to $workers_count"
 
 echo -e "\t• .env configuration completed"
 
