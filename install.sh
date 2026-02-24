@@ -360,6 +360,10 @@ while true; do
   fi
 done
 
+# Define number of Worker nodes
+read -p "❓ How many Worker nodes would you like to deploy? (default: 0): " workers_count
+workers_count=${workers_count:-0}
+
 # Copy mifosx/packages/mifosx-docker/docker-compose.yml in it
 echo -e "\t• Copying docker-compose.yml for use with $dbtype"
 curl -sfLo docker-compose.yml https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/docker-compose.yml || {
@@ -492,6 +496,16 @@ else
   sed -i "s/^WEB_APP_PORT=.*/WEB_APP_PORT=$webAppPort/g" .env
   sed -E -i'' "s|^WEB_APP_URL=http://localhost:[0-9]+|WEB_APP_URL=http://localhost:$webAppPort|g" .env
 fi
+
+# Update Workers Count in .env
+if [[ $(uname) == "Darwin" ]]; then
+  # macOS
+  sed -i '' "s/^FINERACT_WORKERS_COUNT=.*/FINERACT_WORKERS_COUNT=$workers_count/g" .env
+else
+  # Linux
+  sed -i "s/^FINERACT_WORKERS_COUNT=.*/FINERACT_WORKERS_COUNT=$workers_count/g" .env
+fi
+echo -e "\t• Set FINERACT_WORKERS_COUNT to $workers_count"
 
 echo -e "\t• .env configuration completed"
 
