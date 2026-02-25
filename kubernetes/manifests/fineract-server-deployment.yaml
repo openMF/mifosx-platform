@@ -21,7 +21,15 @@ spec:
       containers:
         - env:
             - name: JAVA_TOOL_OPTIONS
-              value: "-Xms384m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
+              # value: "-Xms384m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
+              value: > 
+                    -Xss256k
+                    -Xms512m 
+                    -Xmx2048m 
+                    -XX:+UseSerialGC
+                    -XX:+HeapDumpOnOutOfMemoryError
+                    -Dnetworkaddress.cache.ttl=30
+                    -Dnetworkaddress.cache.negative.ttl=10
             - name: FINERACT_DEFAULT_TENANTDB_DESCRIPTION
               value: "Default Demo Tenant"
             - name: FINERACT_DEFAULT_TENANTDB_HOSTNAME
