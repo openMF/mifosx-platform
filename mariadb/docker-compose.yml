@@ -36,6 +36,13 @@ services:
       test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
       timeout: 10s
       retries: 10
+  # Messaging service for Manager-Worker communication
+  activemq:
+    image: apache/activemq-classic:latest
+    container_name: fineract-activemq
+    restart: always
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "61616"]
   # Backend service
   fineract-server:
     image: openmf/fineract:${TAG}
@@ -49,6 +56,8 @@ services:
       - ${FINERACT_PORT:-3000}:8080
     depends_on:
       fineractmysql:
+        condition: service_healthy
+      activemq:
         condition: service_healthy
     environment:
       # NOTE: node aware scheduler
@@ -90,3 +99,22 @@ services:
       - FINERACT_SERVER_SSL_ENABLED=false
       - FINERACT_SERVER_PORT=8080
       - FINERACT_LOGGING_LEVEL=INFO
+      - FINERACT_MODE=${FINERACT_MANAGER_MODE:-WRITE}
+      - FINERACT_MESSAGING_ACTIVEMQ_BROKER_URL=${FINERACT_MESSAGING_ACTIVEMQ_BROKER_URL}
+      - FINERACT_REPORT_ENGINE_BIRT_ENABLED=${FINERACT_REPORT_ENGINE_BIRT_ENABLED}
+  # Scalable Worker service (Read-only nodes)
+  fineract-worker:
+    image: openmf/fineract:${TAG}
+    depends_on:
+      fineract-server:
+        condition: service_healthy
+    deploy:
+      mode: replicated
+      replicas: ${FINERACT_WORKERS_COUNT:-0}
+    environment:
+      - FINERACT_MODE=${FINERACT_WORKER_MODE:-READ}
+      - FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.mariadb.jdbc.Driver
+      - FINERACT_HIKARI_JDBC_URL=jdbc:mariadb://fineractmysql:3306/fineract_tenants
+      - FINERACT_HIKARI_USERNAME=root
+      - FINERACT_HIKARI_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - FINERACT_MESSAGING_ACTIVEMQ_BROKER_URL=${FINERACT_MESSAGING_ACTIVEMQ_BROKER_URL}
