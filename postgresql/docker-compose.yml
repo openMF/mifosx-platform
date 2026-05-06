@@ -9,11 +9,14 @@ services:
       - FINERACT_API_URL=${SERVER_URL:-http://localhost:3000}
       - FINERACT_API_PROVIDER=/fineract-provider/api
       - FINERACT_API_VERSION=/v1
-      - FINERACT_PLATFORM_TENANT_IDENTIFIER=default
+      - FINERACT_PLATFORM_TENANT_IDENTIFIERS=default,gbm
       - MIFOS_DEFAULT_LANGUAGE=en-US
       - MIFOS_SUPPORTED_LANGUAGES=cs-CS,de-DE,en-US,es-MX,fr-FR,it-IT,ko-KO,li-LI,lv-LV,ne-NE,pt-PT,sw-SW
       - MIFOS_PRELOAD_CLIENTS=true
       - MIFOS_DEFAULT_CHAR_DELIMITER=,
+      - ALLOW_TENANT_SELECTION=true
+      - TENANT_LIST=default,gbm
+      - MIFOS_MODE_MULTI_TENANT=true
     ports:
       - ${WEB_APP_PORT:-80}:80
   # Database service
@@ -38,12 +41,21 @@ services:
     container_name: fineract-activemq
     restart: always
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "61616"]    
+      test: ["CMD-SHELL", "timeout 5s bash -c ':> /dev/tcp/localhost/61616' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s    
   # Backend service
   fineract-server:
-    image: openmf/fineract:${TAG}
+    build:
+      context: .
+      args:
+        TAG: ${TAG:-latest}
+    entrypoint: ["java", "-cp", "/app/resources:/app/classes:/app/libs/*", "org.apache.fineract.ServerApplication"]
     volumes:
       - ./fineract-server/data:/data
+      - ./reports:/app/reports
     healthcheck:
       test: ["CMD", 'sh', '-c', 'echo -e "Checking for the availability of Fineract server deployment"; while ! nc -z "fineract-server" 8080; do sleep 1; printf "-"; done; echo -e " >> Fineract server has started";' ]
       timeout: 10s
@@ -56,6 +68,9 @@ services:
       activemq:
         condition: service_healthy  
     environment:
+      # NOTE: fonts config
+      - JAVA_TOOL_OPTIONS=-Djava.awt.headless=true -Dsun.java2d.fontpath=/usr/share/fonts 
+      - DISPLAY=
       # NOTE: node aware scheduler
       - FINERACT_NODE_ID=1
       # NOTE: env vars prefixed "FINERACT_HIKARI_*" are used to configure the database connection pool
@@ -98,6 +113,9 @@ services:
       - FINERACT_MODE=${FINERACT_MANAGER_MODE:-WRITE}
       - FINERACT_MESSAGING_ACTIVEMQ_BROKER_URL=${FINERACT_MESSAGING_ACTIVEMQ_BROKER_URL}
       - FINERACT_REPORT_ENGINE_BIRT_ENABLED=${FINERACT_REPORT_ENGINE_BIRT_ENABLED}
+      # NOTE: env vars for reporting
+      - FINERACT_${REPORTS_ENGINE}_REPORTS_PATH=/app/reports
+      - FINERACT_${REPORTS_ENGINE}_REPORTS_LOCALE=en
   # Scalable Worker service (Read-only nodes)
   fineract-worker:
     image: openmf/fineract:${TAG}
