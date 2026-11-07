@@ -4,6 +4,10 @@ This setup is not for production environments! It doesn't have data persistence.
 
 This has been tested on Linux Ubuntu 24.04 LTS. Make sure you have MicroK8s installed
 
+On any other cluster (kind, minikube, k3s, Docker Desktop), or when an AI coding agent does the
+install, use the [`mifosx-kubernetes` agent skill](../.agents/skills/mifosx-kubernetes/SKILL.md)
+instead of these scripts.
+
 ## Quick Start
 
 ### Manual Installation

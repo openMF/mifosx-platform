@@ -58,13 +58,22 @@ spec:
       # - name: init-mydb
       #  image: busybox:1.28
       # command: ['sh', '-c', 'echo -e "Checking for the availability of MYSQL server deployment"; while ! nc -z "fineractmysql" 3306; do sleep 1; printf "-"; done; echo -e " >> MYSQL server has started";']
+      # The apache/fineract image ships only the PostgreSQL driver; /app/plugins/* is on its classpath.
+      initContainers:
+      - name: mariadb-jdbc-driver
+        image: curlimages/curl:8.11.1
+        command: ['curl', '-fsSL', '-o', '/plugins/mariadb-java-client.jar',
+                  'https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/3.5.10/mariadb-java-client-3.5.10.jar']
+        volumeMounts:
+        - name: fineract-plugins
+          mountPath: /plugins
       containers:
       - name: fineract-server
         image: apache/fineract:latest
         resources:
           limits:
             cpu: "1000m"
-            memory: "1Gi"
+            memory: "2Gi"
           requests:
             cpu: "200m"
             memory: "0.5Gi"
@@ -119,6 +128,12 @@ spec:
           value: ''
         - name: JAVA_TOOL_OPTIONS
           value: '-Xmx1G'
+        volumeMounts:
+        - name: fineract-plugins
+          mountPath: /app/plugins
         ports:
         - containerPort: 8443
           name: fineract-server
+      volumes:
+      - name: fineract-plugins
+        emptyDir: {}
