@@ -36,7 +36,7 @@ while [[ ${#fineractmysql_pod} -eq 0 ]]; do
 done
 
 fineractmysql_status=$(microk8s kubectl get pods ${fineractmysql_pod} --no-headers -o custom-columns=":status.phase")
-while [[ ${fineractmysql_status} -ne 'Running' ]]; do
+while [[ ${fineractmysql_status} != 'Running' ]]; do
     sleep 1
     fineractmysql_status=$(microk8s kubectl get pods ${fineractmysql_pod} --no-headers -o custom-columns=":status.phase")
 done
@@ -51,7 +51,7 @@ while [[ ${#fineract_server_pod} -eq 0 ]]; do
 done
 
 fineract_server_status=$(microk8s kubectl get pods ${fineract_server_pod} --no-headers -o custom-columns=":status.phase")
-while [[ ${fineract_server_status} -ne 'Running' ]]; do
+while [[ ${fineract_server_status} != 'Running' ]]; do
     sleep 1
     fineract_server_status=$(microk8s kubectl get pods ${fineract_server_pod} --no-headers -o custom-columns=":status.phase")
 done
@@ -63,11 +63,11 @@ microk8s kubectl apply -f mifos-webapp-deployment.yml
 
 mifos_webapp_pod=""
 while [[ ${#mifos_webapp_pod} -eq 0 ]]; do
-    mifos_webapp_pod=$(microk8s kubectl get pods -l tier=backend --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+    mifos_webapp_pod=$(microk8s kubectl get pods -l tier=frontend --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 done
 
 mifos_webapp_status=$(microk8s kubectl get pods ${mifos_webapp_pod} --no-headers -o custom-columns=":status.phase")
-while [[ ${mifos_webapp_status} -ne 'Running' ]]; do
+while [[ ${mifos_webapp_status} != 'Running' ]]; do
     sleep 1
     mifos_webapp_status=$(microk8s kubectl get pods ${mifos_webapp_pod} --no-headers -o custom-columns=":status.phase")
 done

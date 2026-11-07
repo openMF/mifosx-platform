@@ -54,3 +54,34 @@ services:
     platform: linux/x86_64/v8
     ...
 ```
+
+## Install on Kubernetes with an AI agent
+
+[`.agents/skills/mifosx-kubernetes/SKILL.md`](.agents/skills/mifosx-kubernetes/SKILL.md) is an
+[Agent Skill](https://agentskills.io) that installs Mifos X on a Kubernetes cluster with the manifests in
+[`kubernetes/`](kubernetes/README.md), waits until it is ready, and checks the install with API calls.
+It also covers uninstalling and common failures. You need `kubectl` (or `microk8s kubectl`) pointed at
+a running cluster.
+
+Clone the repository and run your agent from its root directory:
+
+```console
+git clone https://github.com/openMF/mifosx-platform.git
+cd mifosx-platform
+```
+
+| Agent | Setup |
+|---|---|
+| OpenCode | None. OpenCode loads skills from `.agents/skills/` |
+| Codex | None. Codex loads skills from `.agents/skills/` |
+| Pi Agent | None. Pi loads skills from `.agents/skills/` once you trust the project |
+| Claude Code | `mkdir -p .claude/skills && ln -s ../../.agents/skills/mifosx-kubernetes .claude/skills/` |
+| Hermes Agent | `mkdir -p ~/.hermes/skills/devops && cp -r .agents/skills/mifosx-kubernetes ~/.hermes/skills/devops/` |
+
+Then ask the agent, for example: *"Install Mifos X on my Kubernetes cluster with PostgreSQL"*, or
+*"Uninstall Mifos X from Kubernetes"*.
+
+The agent runs `kubectl` and two scripts from the skill's `scripts/` directory:
+`create-db-secret.sh`, which creates the database password without showing it, and
+`verify-install.sh`, which runs the checks. Approve those when the agent asks. If the agent can't
+run `create-db-secret.sh`, it should stop; don't let it create the password another way.
