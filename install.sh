@@ -373,7 +373,12 @@ curl -sfLo docker-compose.yml https://raw.githubusercontent.com/openMF/mifosx-pl
 
 # Copy mifosx/packages/twenty-docker/.env.example to .env
 echo -e "\t• Setting up .env file"
-curl -sfLo .env https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$dbtype/fineract-db/docker/$dbtype.env || {
+if [[ "$dbtype" == "mariadb" ]]; then
+  env_path="$dbtype/.env"
+else
+  env_path="$dbtype/fineract-db/docker/$dbtype.env"
+fi
+curl -sfLo .env https://raw.githubusercontent.com/openMF/mifosx-platform/$branch/$env_path || {
   echo "❌ Failed to download .env for $dbtype"
   exit 1
 }
